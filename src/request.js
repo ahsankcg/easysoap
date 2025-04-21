@@ -160,7 +160,10 @@
                 return {
                     'soap_env'  : 'http://schemas.xmlsoap.org/soap/envelope/',
                     'xml_schema': xsd.full || 'http://www.w3.org/2001/XMLSchema',
-                    'namespaces': namespaces
+                    'namespaces': [{
+                       short: 'sch',
+                       full: 'http://www.kareo.com/api/schemas/'
+                     }]
                 };
             });
     }
@@ -189,7 +192,7 @@
 
         this._url = getProtocol(opts) + params.host + params.path;
         this._headers = {
-            'Content-Type': 'text/xml; charset=utf-8'
+            'Content-Type': 'text/xml; charset=utf-8',
         };
 
         this._opts = opts;
@@ -201,20 +204,25 @@
 
         const head = await getRequestHeadParams(combinedParams);
         const envelope = await getRequestEnvelopeParams(combinedParams, opts);
-        const body = await getRequestParamsAsString(params, defaultParams, opts);
+        let body = await getRequestParamsAsString(params, defaultParams, opts);
+
+        if(typeof body === 'string') {
+            body = body.replace(`<${params.method}>`, `<sch:${params.method}>`);
+            body = body.replace(`</${params.method}>`, `</sch:${params.method}>`);
+        }
 
         const $namespaces = envelope.namespaces.map((namespace) => `xmlns:${namespace.short}="${namespace.full}"`);
         const $namespacesAsString = $namespaces.join(' ');
 
-        const $head = (head !== null) ? `<SOAP-ENV:Header>${head.join('')}</SOAP-ENV:Header>` : '';
-        const $body = `<SOAP-ENV:Body>${body}</SOAP-ENV:Body>`;
+        const $head = (head !== null) ? `<soapenv:Header>${head.join('')}</soapenv:Header>` : '';
+        const $body = `<soapenv:Body>${body}</soapenv:Body>`;
 
-        const $soapEnvelope = `<SOAP-ENV:Envelope
-            xmlns:SOAP-ENV="${envelope.soap_env}"
+        const $soapEnvelope = `<soapenv:Envelope
+            xmlns:soapenv="${envelope.soap_env}"
             ${$namespacesAsString}>
             ${$head}
             ${$body}
-        </SOAP-ENV:Envelope>`;
+        </soapenv:Envelope>`;
 
         return `<?xml version="1.0" encoding="UTF-8"?>${$soapEnvelope}`;
     };
@@ -237,6 +245,7 @@
             }
         }
 
+        this._headers['SOAPAction'] = `${this._params.actionUrl}${params.method}`;
         const requestXml = await self.getRequestXml(params, this._params, this._opts);
         const result = await asyncRequest({
             url               : this._url,

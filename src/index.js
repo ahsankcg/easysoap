@@ -87,6 +87,13 @@
 
         // get xml data as json, try to flatten the output
         let dataAsJson = this.getXmlDataAsJson(soapResponse.body);
+
+        let dataAsJsonStr = JSON.stringify(dataAsJson);
+
+        dataAsJsonStr = dataAsJsonStr.replace(/{"i:nil"\s*:\s*"true"}/g, null)
+
+        dataAsJson = JSON.parse(dataAsJsonStr);
+
         if (methodParams.response[0]) {
             if (dataAsJson[methodParams.response[0].name]) {
                 dataAsJson = dataAsJson[methodParams.response[0].name];

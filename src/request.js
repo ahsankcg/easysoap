@@ -160,10 +160,16 @@
                 return {
                     'soap_env'  : 'http://schemas.xmlsoap.org/soap/envelope/',
                     'xml_schema': xsd.full || 'http://www.w3.org/2001/XMLSchema',
-                    'namespaces': [{
+                    'namespaces': [
+                        {
                        short: 'sch',
                        full: 'http://www.kareo.com/api/schemas/'
-                     }]
+                      },
+                      {
+                        short: 'sch1',
+                        full: 'http://www.kareo.com/api/schemas'
+                      }
+                    ]
                 };
             });
     }
@@ -217,9 +223,7 @@
         const $head = (head !== null) ? `<soapenv:Header>${head.join('')}</soapenv:Header>` : '';
         const $body = `<soapenv:Body>${body}</soapenv:Body>`;
 
-        const $soapEnvelope = `<soapenv:Envelope
-            xmlns:soapenv="${envelope.soap_env}"
-            ${$namespacesAsString}>
+        const $soapEnvelope = `<soapenv:Envelope xmlns:soapenv="${envelope.soap_env}" ${$namespacesAsString}>
             ${$head}
             ${$body}
         </soapenv:Envelope>`;

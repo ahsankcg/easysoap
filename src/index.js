@@ -86,13 +86,20 @@
         const methodParams = await this.getMethodParamsByName(params.method, this._params, this._opts);
 
         // get xml data as json, try to flatten the output
-        let dataAsJson = this.getXmlDataAsJson(soapResponse.body);
+        let dataAsJson;
 
-        let dataAsJsonStr = JSON.stringify(dataAsJson);
+        if(soapResponse.header['content-type'] === 'application/json') {
+            const jsonResponse = JSON.parse(soapResponse.body)
+            dataAsJson = jsonResponse.Envelope.Body
+        } else {
+            dataAsJson = this.getXmlDataAsJson(soapResponse.body);
 
-        dataAsJsonStr = dataAsJsonStr.replace(/{"i:nil"\s*:\s*"true"}/g, null)
-
-        dataAsJson = JSON.parse(dataAsJsonStr);
+            let dataAsJsonStr = JSON.stringify(dataAsJson);
+    
+            dataAsJsonStr = dataAsJsonStr.replace(/{"i:nil"\s*:\s*"true"}/g, null)
+    
+            dataAsJson = JSON.parse(dataAsJsonStr);
+        }
 
         if (methodParams.response[0]) {
             if (dataAsJson[methodParams.response[0].name]) {
